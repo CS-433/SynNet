@@ -15,6 +15,8 @@ def download_file(url, output):
 
     (Strongly inspired from https://www.alpharithms.com/progress-bars-for-python-downloads-580122/)
     """
+    if not os.path.exists(output):
+            os.makedirs(output, exist_ok=True)
 
     # Make an HTTP request within a context manager
     with requests.get(url, stream=True) as r:
@@ -23,7 +25,7 @@ def download_file(url, output):
                 output += re.findall("filename=\"(.+)\"", r.headers["Content-Disposition"])[0]
             else:
                 output += url.split("/")[-1]
-
+        print(output)
         name = output
         if output.startswith('../data/assets/'):
             name = output[len('../data/assets/'):]
@@ -31,6 +33,7 @@ def download_file(url, output):
         if os.path.exists(output):
             print(f"Skipping {name} as it already exists")
             return
+
 
         # check header to get content length, in bytes
         total_length = int(r.headers.get("Content-Length"))
@@ -123,6 +126,21 @@ def download_ZINC(sample_size):
             f.write(value + '\n')
 
 
+def download_models(url, name):
+     '''Download trained model'''
+     
+     path = 'models/'
+
+     download_file(url, path) 
+     
+     unzip_file(path + name + '.tar.gz', path + name + '.cpkt')
+
+     os.remove(path + name + '.tar.gz')
+
+
+
+
+
 if __name__ == '__main__':
     samples = 10000
 
@@ -137,3 +155,11 @@ if __name__ == '__main__':
     print("\n[ZINC Dataset]")
     # download a sample of x molecules from ZINC database
     download_ZINC(samples)  # slow
+    
+    act_url = 'https://drive.switch.ch/index.php/s/w8uo1CmI6JZKoa1/download'
+    rt1_url = 'https://drive.switch.ch/index.php/s/3MPFuEkW4Y2BPj5/download'
+    
+    #Download act and rt1 trained models
+    download_models(act_url, 'act')
+    download_models(rt1_url, 'rt1')
+    
