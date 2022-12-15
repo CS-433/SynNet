@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 from tdc import Evaluator
+from tdc import Oracle
+from rdkit.Chem import Descriptors
+import rdkit.Chem as Chem
 
 def sanitize(input_file):
     """
@@ -31,9 +34,9 @@ def sanitize(input_file):
     return recovered, unrecovered, n_total
 
 
-def data_analysis(recovered, unrecovered, n_total):
+def metrics_for_table1(recovered, unrecovered, n_total):
     """
-    Compute various informations and metrics
+    Compute various metrics for table 1
 
     Args:
         Recovered: Dataframe, The successfully recovered molecules
@@ -75,3 +78,31 @@ def data_analysis(recovered, unrecovered, n_total):
     kl_divergence = temp[0:2]
     fc_distance = temp[2:4]
     return recovery_rate, average_similarity, kl_divergence, fc_distance
+
+
+
+def metrics_for_figure4(recovered):
+    """
+    Compute various metrics for figure 4
+
+    Args:
+        Recovered: Dataframe, The successfully recovered molecules
+        Unrecovered: Dataframe, The unsuccessfully recovered molecules
+
+    Returns:
+    score_target: contains SA, LogP, QED, MW scores for target molecules
+    score_decoded: contains SA, LogP, QED, MW scores for target molecules
+    """
+    score_target = {}
+    score_decoded = {}
+
+    for func in "SA LogP QED".split():
+        oracle = Oracle(name = func)
+        score_target[func] = [oracle(smi) for smi in recovered["targets"]]
+        score_decoded[func] = [oracle(smi) for smi in recovered["decoded"]]
+
+    MW = Descriptors.ExactMolWt(Chem.MolFromSmiles('CC'))
+    score_target["MW"] = [Descriptors.ExactMolWt(Chem.MolFromSmiles(smi)) for smi in recovered["targets"]]
+    score_decoded["MW"] = [Descriptors.ExactMolWt(Chem.MolFromSmiles(smi)) for smi in recovered["decoded"]]
+
+    return score_target, score_decoded
