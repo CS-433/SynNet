@@ -4,6 +4,7 @@ data/
 figures/syntrees/
 results/
 original_checkpoints/
+trained_checkpoints/
 oracle/
 logs/
 tmp/

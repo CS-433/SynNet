@@ -1,5 +1,7 @@
 import re
 import random
+import shutil
+
 from file_utils import *
 
 import requests
@@ -112,7 +114,7 @@ def get_original_checkpoints(project_root: Path, force=False) -> list[MLP]:
     checkpoint_path = project_root / "original_checkpoints"
 
     # Check that it does not exist yet
-    if should_skip("original_checkpoints", "compute", checkpoint_path, force):
+    if should_skip("original checkpoints", "compute", checkpoint_path, force):
         return load_checkpoints(checkpoint_path)
 
     # retrieve the checkpoint tar file
@@ -132,6 +134,41 @@ def get_original_checkpoints(project_root: Path, force=False) -> list[MLP]:
             checkpoint_temp_path / f"{model}.ckpt",
             model_path / "ckpts.dummy-val_loss=0.00.ckpt"
         )
+
+    return load_checkpoints(checkpoint_path)
+
+
+def get_trained_checkpoints(project_root: Path, force=False) -> list[MLP]:
+    """
+    Retrieve the checkpoint of the model we trained
+
+    Download and process it if needed. If the file is already present, it will not be recomputed.
+    But you can set force to True to bypass any existing intermediate file.
+
+    Args:
+        project_root: Path to the project root
+        force (False): If set, any stored file will be bypassed
+
+    Returns:
+        A list containing the checkpoints
+    """
+    checkpoint_path = project_root / "trained_checkpoints"
+    models = {
+        "act": "https://drive.switch.ch/index.php/s/w8uo1CmI6JZKoa1/download",
+        "rt1": "https://drive.switch.ch/index.php/s/3MPFuEkW4Y2BPj5/download",
+        "rxn": "https://drive.switch.ch/index.php/s/gZIiEIufxC2LYUp/download",
+        "rt2": "https://drive.switch.ch/index.php/s/N2hmZiJDBJpLYWi/download"
+    }
+
+    # Check that it does not exist yet
+    if should_skip("trained checkpoints", "compute", checkpoint_path, force):
+        return load_checkpoints(checkpoint_path)
+
+    checkpoint_path.mkdir()
+    for model, url in models.items():
+        model_tar = download_file(url, download_path, force)
+        extracted_path = extract_tar(model_tar, checkpoint_path, force)
+        extracted_path.rename(checkpoint_path / model)
 
     return load_checkpoints(checkpoint_path)
 
@@ -165,6 +202,11 @@ def get_building_blocks(project_root: Path, force=False) -> list[smile]:
     BuildingBlockFileHandler().save(str(output_path), smiles)
 
     return smiles
+
+
+def get_test_set() -> list[smile]:
+    print("Loading test set...")
+    return load_smiles(Path("reachable_molecules.csv.gz"))
 
 
 def get_chembl_dataset(project_root: Path, sample_size: int = None, force=False) -> list[smile]:

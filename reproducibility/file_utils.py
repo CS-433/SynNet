@@ -164,5 +164,5 @@ def load_checkpoints(checkpoint_path: Path) -> list[MLP]:
     Returns:
         A list containing the checkpoints
     """
-    ckpt_files = [find_best_model_ckpt(str(checkpoint_path / model)) for model in "act rt1 rxn rt2".split()]
+    ckpt_files = [find_best_model_ckpt(str(checkpoint_path / model)) for model in "rxn rt2".split()]
     return [load_mlp_from_ckpt(str(file)) for file in ckpt_files]
