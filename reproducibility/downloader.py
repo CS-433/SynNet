@@ -10,6 +10,7 @@ from rdkit import Chem
 
 from synnet.data_generation.preprocessing import BuildingBlockFileHandler
 from synnet.models.mlp import MLP
+from synnet.utils.data_utils import SyntheticTreeSet, SyntheticTree
 
 # Where the intermediates file of the downloader are store
 intermediates_path = Path(".") / "intermediates"
@@ -362,16 +363,30 @@ def get_zinc_dataset(project_root: Path, sample_size=None, force=False) -> list[
     return smiles
 
 
+def get_filtered_syntrees(force=False) -> dict[str, list[dict]]:
+    """
+    Download the filtered synthetic trees (train, validation and test sets)
 
-def get_filtered_syntrees(path):
-    '''Download the filtered synthetic trees (train, validation and test sets)
-    '''
-    
-    train = 'https://drive.switch.ch/index.php/s/sH2FTC0Xna3oDbD/download'
-    val = 'https://drive.switch.ch/index.php/s/0F9GX5HR4pgW8KG/download'
-    test = 'https://drive.switch.ch/index.php/s/dX6c283Ga4OU3kS/download'
-    
-    for url, name in zip((train, val, test), 
-    ('train.json.gz', 'validation.json.gz', 'test.json.gz')):
-        full_path = Path(path + name)
-        download_file(url, full_path, True)
+    Returns:
+        A dict mapping the synthetic trees names to their values
+    """
+
+    trees = [
+        ("train", "https://drive.switch.ch/index.php/s/sH2FTC0Xna3oDbD/download"),
+        ("valid", "https://drive.switch.ch/index.php/s/0F9GX5HR4pgW8KG/download"),
+        ("test", "https://drive.switch.ch/index.php/s/dX6c283Ga4OU3kS/download"),
+    ]
+
+    output = {}
+
+    for name, url in trees:
+        syntree_path = intermediates_path / f"{name}.json.gz"
+        # Download compressed file
+        download_file(url, syntree_path, force)
+        # Load tree
+        output[name] = [
+            syntree.output_dict()
+            for syntree in SyntheticTreeSet().load(str(syntree_path)).sts
+        ]
+
+    return output
