@@ -36,17 +36,16 @@ def processor(emb, **kwargs):
     """
     emb = emb.reshape((1, -1))
     try:
-        tree, action = synthetic_tree_decoder(
-            z_target=emb,
-            **kwargs
-        )
+        tree, action = synthetic_tree_decoder(z_target=emb, **kwargs)
     except Exception as e:
         print(e)
         action = -1
     if action != 3:
         return None, None
     else:
-        scores = np.array(tanimoto_similarity(emb, [node.smiles for node in tree.chemicals]))
+        scores = np.array(
+            tanimoto_similarity(emb, [node.smiles for node in tree.chemicals])
+        )
         max_score_idx = np.where(scores == np.max(scores))[0][0]
         return tree.chemicals[max_score_idx].smiles, tree
 
@@ -203,18 +202,20 @@ def mut_probability_scheduler(n, total):
         return 0.5
 
 
-def optimize(starting_smiles: list[smile],
-             bblocks: list[smile],
-             rxns_collection: ReactionSet,
-             checkpoints: list[MLP],
-             mol_embedder: MolEmbedder,
-             output_dir: Path,
-             num_gen: int,
-             objective: str,
-             num_offspring: int,
-             nbits,
-             rxn_template,
-             cpu_cores: int):
+def optimize(
+    starting_smiles: list[smile],
+    bblocks: list[smile],
+    rxns_collection: ReactionSet,
+    checkpoints: list[MLP],
+    mol_embedder: MolEmbedder,
+    output_dir: Path,
+    num_gen: int,
+    objective: str,
+    num_offspring: int,
+    nbits,
+    rxn_template,
+    cpu_cores: int,
+):
     """
     Optimize given smiles with the model
 
@@ -251,23 +252,27 @@ def optimize(starting_smiles: list[smile],
     act_net, rt1_net, rxn_net, rt2_net = checkpoints
 
     print("Data loaded")
-    func = partial(processor,
-                   building_blocks=bblocks,
-                   bb_dict=bb_dict,
-                   reaction_templates=rxns_collection.rxns,
-                   mol_embedder=bblocks_mol_embedder.kdtree,  # TODO: fix this, currently misused,
-                   action_net=act_net,
-                   reactant1_net=rt1_net,
-                   rxn_net=rxn_net,
-                   reactant2_net=rt2_net,
-                   bb_emb=bb_emb,
-                   rxn_template=rxn_template,
-                   n_bits=nbits,
-                   max_step=15)
+    func = partial(
+        processor,
+        building_blocks=bblocks,
+        bb_dict=bb_dict,
+        reaction_templates=rxns_collection.rxns,
+        mol_embedder=bblocks_mol_embedder.kdtree,  # TODO: fix this, currently misused,
+        action_net=act_net,
+        reactant1_net=rt1_net,
+        rxn_net=rxn_net,
+        reactant2_net=rt2_net,
+        bb_emb=bb_emb,
+        rxn_template=rxn_template,
+        n_bits=nbits,
+        max_step=15,
+    )
 
     # Evaluation initial population
     with mp.Pool(processes=cpu_cores) as pool:
-        scores, mols, trees = fitness(embs=population, _pool=pool, obj=objective, func=func)
+        scores, mols, trees = fitness(
+            embs=population, _pool=pool, obj=objective, func=func
+        )
 
     scores = np.array(scores)
     score_x = np.argsort(scores)
@@ -296,9 +301,13 @@ def optimize(starting_smiles: list[smile],
             num_mut_per_ele=num_mut_per_ele_,
             mut_probability=mut_probability_,
         )
-        new_population = np.unique(np.concatenate([population, offspring], axis=0), axis=0)
+        new_population = np.unique(
+            np.concatenate([population, offspring], axis=0), axis=0
+        )
         with mp.Pool(processes=cpu_cores) as pool:
-            new_scores, new_mols, trees = fitness(new_population, pool, objective, func=func)
+            new_scores, new_mols, trees = fitness(
+                new_population, pool, objective, func=func
+            )
         new_scores = np.array(new_scores)
         scores = []
         mols = []

@@ -30,8 +30,7 @@ def wrapper_decoder(smiles: str, **kwargs) -> Tuple[str, float, SyntheticTree]:
     emb = mol_fp(smiles)
     try:
         smi, similarity, tree, action = synthetic_tree_decoder_greedy_search(
-            z_target=emb,
-            **kwargs
+            z_target=emb, **kwargs
         )
     except Exception as e:
         print(e, file=sys.stderr)
@@ -42,21 +41,23 @@ def wrapper_decoder(smiles: str, **kwargs) -> Tuple[str, float, SyntheticTree]:
         similarity = 0
         tree = None
 
-    print(".", end='')
+    print(".", end="")
     return smi, similarity, tree
 
 
-def synthesis(targets: list[smile],
-              bblocks: list[smile],
-              checkpoints: list[MLP],
-              rxns_collection: ReactionSet,
-              mol_embedder: MolEmbedder,
-              output_dir: Path,
-              rxn_template: str,
-              n_bits: int,
-              beam_width: int,
-              max_step: int,
-              cpu_cores: int):
+def synthesis(
+    targets: list[smile],
+    bblocks: list[smile],
+    checkpoints: list[MLP],
+    rxns_collection: ReactionSet,
+    mol_embedder: MolEmbedder,
+    output_dir: Path,
+    rxn_template: str,
+    n_bits: int,
+    beam_width: int,
+    max_step: int,
+    cpu_cores: int,
+):
     """
     Generate synthetic trees for a set of specified query molecules.
 
@@ -86,20 +87,22 @@ def synthesis(targets: list[smile],
     act_net, rt1_net, rxn_net, rt2_net = checkpoints
 
     # Wrapper func
-    wrapper_func = partial(wrapper_decoder,
-                           building_blocks=bblocks,
-                           bb_dict=bblocks_dict,
-                           reaction_templates=rxns_collection.rxns,
-                           mol_embedder=bblocks_mol_embedder.kdtree,
-                           action_net=act_net,
-                           reactant1_net=rt1_net,
-                           rxn_net=rxn_net,
-                           reactant2_net=rt2_net,
-                           bb_emb=bb_emb,
-                           rxn_template=rxn_template,
-                           n_bits=n_bits,
-                           beam_width=beam_width,
-                           max_step=max_step)
+    wrapper_func = partial(
+        wrapper_decoder,
+        building_blocks=bblocks,
+        bb_dict=bblocks_dict,
+        reaction_templates=rxns_collection.rxns,
+        mol_embedder=bblocks_mol_embedder.kdtree,
+        action_net=act_net,
+        reactant1_net=rt1_net,
+        rxn_net=rxn_net,
+        reactant2_net=rt2_net,
+        bb_emb=bb_emb,
+        rxn_template=rxn_template,
+        n_bits=n_bits,
+        beam_width=beam_width,
+        max_step=max_step,
+    )
 
     # Decode queries, i.e. the target molecules.
     print(f"Start to decode {len(targets)} target molecules.")
@@ -130,7 +133,9 @@ def synthesis(targets: list[smile],
     output_dir.mkdir(parents=True, exist_ok=True)
     print(f"Saving results to {output_dir} ...")
 
-    df = pd.DataFrame({"targets": targets, "decoded": decoded, "similarity": similarities})
+    df = pd.DataFrame(
+        {"targets": targets, "decoded": decoded, "similarity": similarities}
+    )
     df.to_csv(f"{output_dir}/decoded_results.csv.gz", compression="gzip", index=False)
 
     synthetic_tree_set = SyntheticTreeSet(sts=trees)

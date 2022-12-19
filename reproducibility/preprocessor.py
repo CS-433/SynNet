@@ -22,7 +22,9 @@ from synnet.MolEmbedder import MolEmbedder
 from functools import partial
 
 
-def filter_bblocks(project_root: Path, bblocks: list[smile], force=False) -> (list[smile], ReactionSet):
+def filter_bblocks(
+    project_root: Path, bblocks: list[smile], force=False
+) -> (list[smile], ReactionSet):
     """
     This function is equivalent to script/01-filter-building-blocks.py
 
@@ -46,12 +48,18 @@ def filter_bblocks(project_root: Path, bblocks: list[smile], force=False) -> (li
         - The filtered building blocks
         - The reactions set
     """
-    rxn_templates_path = project_root / "data" / "assets" / "reaction-templates" / "hb.txt"
-    bblocks_preprocess_path = project_root / "data" / "pre-process" / "building-blocks-rxns"
+    rxn_templates_path = (
+        project_root / "data" / "assets" / "reaction-templates" / "hb.txt"
+    )
+    bblocks_preprocess_path = (
+        project_root / "data" / "pre-process" / "building-blocks-rxns"
+    )
     bblocks_filtered_path = bblocks_preprocess_path / "bblocks-enamine-us.csv.gz"
     rxn_collection_path = bblocks_preprocess_path / "rxns-hb-enamine-us.json.gz"
 
-    skip_bblocks = should_skip("filtered building blocks", "compute", bblocks_filtered_path, force)
+    skip_bblocks = should_skip(
+        "filtered building blocks", "compute", bblocks_filtered_path, force
+    )
     skip_rxn = should_skip("rections", "compute", rxn_collection_path, force)
 
     if skip_bblocks and skip_rxn:
@@ -68,9 +76,7 @@ def filter_bblocks(project_root: Path, bblocks: list[smile], force=False) -> (li
     rxn_templates = ReactionTemplateFileHandler().load(str(rxn_templates_path))
 
     bbf = BuildingBlockFilter(
-        building_blocks=bblocks,
-        rxn_templates=rxn_templates,
-        verbose=True
+        building_blocks=bblocks, rxn_templates=rxn_templates, verbose=True
     )
     # Time intensive task...
     bbf.filter()
@@ -85,7 +91,9 @@ def filter_bblocks(project_root: Path, bblocks: list[smile], force=False) -> (li
     return bblocks, rxn_collection
 
 
-def compute_embeddings(project_root: Path, bblocks: list[smile], cpu_cores: int, force=False) -> MolEmbedder:
+def compute_embeddings(
+    project_root: Path, bblocks: list[smile], cpu_cores: int, force=False
+) -> MolEmbedder:
     """
     This function is equivalent to script/02-compute-embeddings.py
 
@@ -104,7 +112,13 @@ def compute_embeddings(project_root: Path, bblocks: list[smile], cpu_cores: int,
     Returns:
         The loader/computed molecule embedder
     """
-    mol_embedder_path = project_root / "data" / "pre-process" / "embeddings" / "hb-enamine-embeddings.npy"
+    mol_embedder_path = (
+        project_root
+        / "data"
+        / "pre-process"
+        / "embeddings"
+        / "hb-enamine-embeddings.npy"
+    )
 
     mol_embedder = MolEmbedder(processes=cpu_cores)
 

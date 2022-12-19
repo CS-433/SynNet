@@ -12,7 +12,7 @@ from synnet.data_generation.preprocessing import BuildingBlockFileHandler
 from synnet.models.mlp import MLP
 
 # Where the intermediates file of the downloader are store
-intermediates_path = Path('.') / "intermediates"
+intermediates_path = Path(".") / "intermediates"
 # Where the downloaded files are stored
 download_path = intermediates_path / "downloads"
 
@@ -20,7 +20,9 @@ intermediates_path.mkdir(exist_ok=True)
 download_path.mkdir(exist_ok=True)
 
 
-def download_file(url: str, output: Path, force: bool, progress_bar: bool = True) -> Path:
+def download_file(
+    url: str, output: Path, force: bool, progress_bar: bool = True
+) -> Path:
     """
     Download a file and store it in the provided output path.
 
@@ -42,7 +44,8 @@ def download_file(url: str, output: Path, force: bool, progress_bar: bool = True
         # Retrieve file name and update output if needed
         if output.is_dir():
             if "Content-Disposition" in r.headers.keys():
-                name = re.findall("filename=\"(.+)\"", r.headers["Content-Disposition"])[0]
+                content = r.headers["Content-Disposition"]
+                name = re.findall('filename="(.+)"', content)[0]
             else:
                 name = file_name(url)
 
@@ -59,11 +62,13 @@ def download_file(url: str, output: Path, force: bool, progress_bar: bool = True
         stream = r.raw
         if progress_bar:
             # implement progress bar via tqdm
-            stream = tqdm.wrapattr(r.raw, "read", total=total_length, desc=f"Downloading {name}")
+            stream = tqdm.wrapattr(
+                r.raw, "read", total=total_length, desc=f"Downloading {name}"
+            )
 
         with stream as raw:
             # save the output to a file
-            with output.open('wb') as out:
+            with output.open("wb") as out:
                 shutil.copyfileobj(raw, out)
 
         return output
@@ -91,7 +96,10 @@ def convert_sdf_to_smiles(input_path: Path, sample: int = None) -> list[smile]:
     print("done")
 
     # create mol generator and setup progress bar using tqdm
-    mols = (supplier[i] for i in tqdm(r, total=size, desc="Converting sdf to smile", unit="mol"))
+    mols = (
+        supplier[i]
+        for i in tqdm(r, total=size, desc="Converting sdf to smile", unit="mol")
+    )
     return [Chem.MolToSmiles(mol, canonical=True, isomericSmiles=False) for mol in mols]
 
 
@@ -132,7 +140,7 @@ def get_original_checkpoints(project_root: Path, force=False) -> list[MLP]:
 
         shutil.move(
             checkpoint_temp_path / f"{model}.ckpt",
-            model_path / "ckpts.dummy-val_loss=0.00.ckpt"
+            model_path / "ckpts.dummy-val_loss=0.00.ckpt",
         )
 
     return load_checkpoints(checkpoint_path)
@@ -159,7 +167,7 @@ def get_trained_checkpoints(project_root: Path, force=False) -> list[MLP]:
         "act": "https://drive.switch.ch/index.php/s/w8uo1CmI6JZKoa1/download",
         "rt1": "https://drive.switch.ch/index.php/s/3MPFuEkW4Y2BPj5/download",
         "rxn": "https://drive.switch.ch/index.php/s/gZIiEIufxC2LYUp/download",
-        "rt2": "https://drive.switch.ch/index.php/s/N2hmZiJDBJpLYWi/download"
+        "rt2": "https://drive.switch.ch/index.php/s/N2hmZiJDBJpLYWi/download",
     }
 
     # Check that it does not exist yet
@@ -190,14 +198,24 @@ def get_building_blocks(project_root: Path, force=False) -> list[smile]:
         A list containing the building block smiles
     """
 
-    output_path = project_root / "data" / "assets" / "building-blocks" / "enamine-us-smiles.csv.gz"
+    output_path = (
+        project_root
+        / "data"
+        / "assets"
+        / "building-blocks"
+        / "enamine-us-smiles.csv.gz"
+    )
 
     if should_skip("building_blocks", "compute", output_path, force):
         smiles = BuildingBlockFileHandler().load(str(output_path))
         return smiles
 
     # download building_block sdf
-    sdf_file = download_file("https://drive.switch.ch/index.php/s/zLDApVjC7bU5qx2/download", download_path, force)
+    sdf_file = download_file(
+        "https://drive.switch.ch/index.php/s/zLDApVjC7bU5qx2/download",
+        download_path,
+        force,
+    )
     # convert sdf to smiles
     smiles = convert_sdf_to_smiles(sdf_file)
     # save it
@@ -211,7 +229,9 @@ def get_test_set() -> list[smile]:
     return load_smiles(Path("data") / "reachable_molecules.csv.gz")
 
 
-def get_chembl_dataset(project_root: Path, sample_size: int = None, force=False) -> list[smile]:
+def get_chembl_dataset(
+    project_root: Path, sample_size: int = None, force=False
+) -> list[smile]:
     """
     Retrieve the ChEMBL smiles.
 
@@ -230,20 +250,28 @@ def get_chembl_dataset(project_root: Path, sample_size: int = None, force=False)
     """
 
     sdf_file = intermediates_path / "chembl_31.sdf"
-    output_path = project_root / "data" / "assets" / "molecules" / "chembl-smiles.csv.gz"
+    output_path = (
+        project_root / "data" / "assets" / "molecules" / "chembl-smiles.csv.gz"
+    )
 
     # Check that it does not exist yet
     if should_skip("ChEMBL", "compute", output_path, force):
         # Load the data
         smiles = load_smiles(output_path)
         if sample_size and len(smiles) != sample_size:
-            print("The number of samples differs from the expected amount. The dataset will be recomputed")
+            print(
+                "The number of samples differs from the expected amount. The dataset will be recomputed"
+            )
             safe_remove(output_path)
         else:
             return smiles
 
     # Download and extract ChEMBL sdf
-    compressed_sdf = download_file("https://drive.switch.ch/index.php/s/jXuJyFIbADdSJkR/download", download_path, force)
+    compressed_sdf = download_file(
+        "https://drive.switch.ch/index.php/s/jXuJyFIbADdSJkR/download",
+        download_path,
+        force,
+    )
     decompress_file(compressed_sdf, sdf_file, force)
 
     # Convert sdf to smiles
@@ -280,7 +308,9 @@ def get_zinc_dataset(project_root: Path, sample_size=None, force=False) -> list[
         # Load the data
         smiles = load_smiles(output_path)
         if sample_size and len(smiles) != sample_size:
-            print("The number of samples differs from the expected amount. The dataset will be recomputed")
+            print(
+                "The number of samples differs from the expected amount. The dataset will be recomputed"
+            )
             safe_remove(output_path)
         else:
             return smiles
@@ -294,7 +324,7 @@ def get_zinc_dataset(project_root: Path, sample_size=None, force=False) -> list[
         #
         # This is not perfect as the correlation between molecules in the same file is high.
         # But it avoids downloading the whole dataset
-        links = links.sample(frac=1, random_state=random.randint(0, 2 ** 32 - 1))
+        links = links.sample(frac=1, random_state=random.randint(0, 2**32 - 1))
 
     # Retrieve elements from the column
     links = links[0]
@@ -316,7 +346,7 @@ def get_zinc_dataset(project_root: Path, sample_size=None, force=False) -> list[
 
         # Retrieve smiles from the link
         download_file(link, path, force, progress_bar=False)
-        df = pd.read_csv(path, sep='\t')
+        df = pd.read_csv(path, sep="\t")
 
         master_df = pd.concat((master_df, df), axis=0)
         # Stop if we have enough molecules
@@ -325,7 +355,7 @@ def get_zinc_dataset(project_root: Path, sample_size=None, force=False) -> list[
             break
 
     # Get only the smiles, and exactly the number we want
-    smiles = master_df['smiles'].sample(sample_size)
+    smiles = master_df["smiles"].sample(sample_size)
     # Write it into a file
     save_smiles(smiles, output_path)
 

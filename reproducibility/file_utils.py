@@ -77,7 +77,9 @@ def extract_file(input_path: Path, output_path: Path, force: bool, extract_func)
     size = input_path.stat().st_size
     with input_path.open("rb") as raw:
         # Wrap progress bar around file obj
-        with tqdm.wrapattr(raw, 'read', total=size, desc=f"Extracting {input_path.name}") as f:
+        with tqdm.wrapattr(
+            raw, "read", total=size, desc=f"Extracting {input_path.name}"
+        ) as f:
             extract_func(f)
 
 
@@ -93,10 +95,11 @@ def decompress_file(input_path: Path, output_path: Path, force: bool):
         output_path: Path to the decompressed file
         force: If set to true, the file will be decompressed even if it has already been done
     """
+
     def extract(f):
         # Decompress gz file
         with gzip.open(f) as f_in:
-            with output_path.open('wb') as f_out:
+            with output_path.open("wb") as f_out:
                 shutil.copyfileobj(f_in, f_out)
 
     extract_file(input_path, output_path, force, extract)
@@ -118,7 +121,7 @@ def extract_tar(input_path: Path, extract_root: Path, force: bool) -> Path:
     Returns:
         The parent path to all output files
     """
-    output_path = extract_root / (input_path.name.split('.')[0] + "_extracted")
+    output_path = extract_root / (input_path.name.split(".")[0] + "_extracted")
 
     def extract(f):
         # Extract tar file
@@ -164,5 +167,8 @@ def load_checkpoints(checkpoint_path: Path) -> list[MLP]:
     Returns:
         A list containing the checkpoints
     """
-    ckpt_files = [find_best_model_ckpt(str(checkpoint_path / model)) for model in "act rt1 rxn rt2".split()]
+    ckpt_files = [
+        find_best_model_ckpt(str(checkpoint_path / model))
+        for model in "act rt1 rxn rt2".split()
+    ]
     return [load_mlp_from_ckpt(str(file)) for file in ckpt_files]
