@@ -1,6 +1,5 @@
 import re
 import random
-import shutil
 
 from file_utils import *
 
@@ -110,6 +109,7 @@ def get_original_checkpoints(project_root: Path, force=False) -> list[MLP]:
     Returns:
         A list containing the checkpoints
     """
+
     tar_file = download_path / "original_checkpoints.tar.gz"
     checkpoint_path = project_root / "original_checkpoints"
 
@@ -152,7 +152,9 @@ def get_trained_checkpoints(project_root: Path, force=False) -> list[MLP]:
     Returns:
         A list containing the checkpoints
     """
+
     checkpoint_path = project_root / "trained_checkpoints"
+
     models = {
         "act": "https://drive.switch.ch/index.php/s/w8uo1CmI6JZKoa1/download",
         "rt1": "https://drive.switch.ch/index.php/s/3MPFuEkW4Y2BPj5/download",
@@ -206,7 +208,7 @@ def get_building_blocks(project_root: Path, force=False) -> list[smile]:
 
 def get_test_set() -> list[smile]:
     print("Loading test set...")
-    return load_smiles(Path("reachable_molecules.csv.gz"))
+    return load_smiles(Path("data") / "reachable_molecules.csv.gz")
 
 
 def get_chembl_dataset(project_root: Path, sample_size: int = None, force=False) -> list[smile]:
@@ -270,7 +272,7 @@ def get_zinc_dataset(project_root: Path, sample_size=None, force=False) -> list[
         A list containing the ZINC smiles
     """
 
-    urls_path = project_root / "reproducibility" / "ZINC-downloader-2D.csv"
+    urls_path = project_root / "reproducibility" / "data" / "ZINC-downloader-2D.csv"
     output_path = project_root / "data" / "assets" / "molecules" / "zinc-smiles.csv.gz"
 
     # Check whether this process should be skipped
