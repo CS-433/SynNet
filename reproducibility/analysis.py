@@ -4,8 +4,13 @@ from tdc import Evaluator
 from tdc import Oracle
 from rdkit.Chem import Descriptors
 import rdkit.Chem as Chem
+import matplotlib.pyplot as plt
+from sklearn.metrics import r2_score
 
-def sanitize(input_file):
+from anaconda3.Lib.pathlib import Path
+
+
+def sanitize(input_file: Path):
     """
     Separate recovered (similarity = 1) from unrecovered (similarity in ]0,1[)
     and discarding NaNs (similarity = 0)
@@ -49,14 +54,11 @@ def metrics_for_table1(recovered, unrecovered, n_total):
         kl_divergence: Kullback-Leibler (KL) divergence
         fc_distance: Frechet ChemNet Distance (FCD)
     """
-    n_recovered = len(recovered)
-    n_unrecovered = len(unrecovered)
+
     similarity = unrecovered["similarity"].tolist()
 
+    n_recovered = len(recovered)
     recovery_rate = n_recovered/n_total * 100
-
-    n_finished = n_recovered + n_unrecovered
-    n_unfinished = n_total - n_finished
 
     average_similarity = np.mean(similarity)
 
@@ -80,6 +82,18 @@ def metrics_for_table1(recovered, unrecovered, n_total):
     return recovery_rate, average_similarity, kl_divergence, fc_distance
 
 
+def display_table1(input_file: Path):
+    """
+    Compute various metrics for table 1 and display it in a notebook
+
+    Args:
+        input_file: String describing path to dataset
+    """
+    recovered, unrecovered, n_total = sanitize(input_file)
+    recovery_rate, average_similarity, kl_divergence, fc_distance = metrics_for_table1(recovered, unrecovered, n_total)
+    df = pd.DataFrame(data={"N": n_total, "Recovery Rate % ": recovery_rate, "Average Similarity ": average_similarity, "KL Divergence ": kl_divergence, "FC Distance ": fc_distance}, index=["Reachable", "Unreachable"])
+    display(df)
+
 
 def metrics_for_figure4(recovered):
     """
@@ -87,11 +101,10 @@ def metrics_for_figure4(recovered):
 
     Args:
         Recovered: Dataframe, The successfully recovered molecules
-        Unrecovered: Dataframe, The unsuccessfully recovered molecules
 
     Returns:
-    score_target: contains SA, LogP, QED, MW scores for target molecules
-    score_decoded: contains SA, LogP, QED, MW scores for target molecules
+        score_target: contains SA, LogP, QED, MW scores for target molecules
+        score_decoded: contains SA, LogP, QED, MW scores for target molecules
     """
     score_target = {}
     score_decoded = {}
@@ -101,8 +114,43 @@ def metrics_for_figure4(recovered):
         score_target[func] = [oracle(smi) for smi in recovered["targets"]]
         score_decoded[func] = [oracle(smi) for smi in recovered["decoded"]]
 
-    MW = Descriptors.ExactMolWt(Chem.MolFromSmiles('CC'))
     score_target["MW"] = [Descriptors.ExactMolWt(Chem.MolFromSmiles(smi)) for smi in recovered["targets"]]
     score_decoded["MW"] = [Descriptors.ExactMolWt(Chem.MolFromSmiles(smi)) for smi in recovered["decoded"]]
 
     return score_target, score_decoded
+
+def produce_figure4(input_file: Path, title):
+    """
+    Compute various metrics for table 1 and display it in a notebook
+
+    Args:
+        input_file: Path to dataset
+    """
+    recovered, unrecovered, n_total = sanitize(input_file)
+    score_target, score_decoded = metrics_for_figure4(recovered)
+
+    xlim = [[1,7],[-10,10],[0,1000],[0,1]]
+    ylim = [[1,7],[-10,10],[0,1000],[0,1]]
+    text_pos = [[1.5,6.5],[-8,8.5],[100,900],[0.1,0.9]]
+
+    fig, axs = plt.subplots(1,4, figsize=(20, 5))
+    fig.suptitle(title+" Molecules", fontsize=15)
+    for idx, func in enumerate("SA LogP MW QED".split()):
+        target = score_target[func]
+        decoded = score_decoded[func]
+
+        # compute regression score function
+        r2 = r2_score(decoded,target)
+
+        axs[idx].plot(np.linspace(xlim[idx][0], xlim[idx][1], 10), np.linspace(ylim[idx][0], ylim[idx][1], 10), 'r--')
+        axs[idx].plot(decoded, target, 'x')
+        axs[idx].set_xlabel(func + " Score", fontsize=15)
+        axs[idx].text(text_pos[idx][0],text_pos[idx][1], "$r^2$ = "+ '{:.3}'.format(r2), fontsize=15)
+        axs[idx].set_xlim(xlim[idx])
+        axs[idx].set_ylim(ylim[idx])
+
+    axs[0].set_ylabel("Recovered Value", fontsize=15)
+    fig.tight_layout()
+
+    plt.savefig(title + "Figure4.png")
+

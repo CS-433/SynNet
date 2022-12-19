@@ -1,6 +1,6 @@
 # === custom ===
 reproducibility/intermediates/
-data/
+/data/
 figures/syntrees/
 results/
 original_checkpoints/
