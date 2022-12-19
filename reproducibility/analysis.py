@@ -10,7 +10,7 @@ from sklearn.metrics import r2_score
 from anaconda3.Lib.pathlib import Path
 
 
-def sanitize(input_file):
+def sanitize(input_file: Path):
     """
     Separate recovered (similarity = 1) from unrecovered (similarity in ]0,1[)
     and discarding NaNs (similarity = 0)
@@ -54,14 +54,11 @@ def metrics_for_table1(recovered, unrecovered, n_total):
         kl_divergence: Kullback-Leibler (KL) divergence
         fc_distance: Frechet ChemNet Distance (FCD)
     """
-    n_recovered = len(recovered)
-    n_unrecovered = len(unrecovered)
+
     similarity = unrecovered["similarity"].tolist()
 
+    n_recovered = len(recovered)
     recovery_rate = n_recovered/n_total * 100
-
-    n_finished = n_recovered + n_unrecovered
-    n_unfinished = n_total - n_finished
 
     average_similarity = np.mean(similarity)
 
@@ -85,7 +82,7 @@ def metrics_for_table1(recovered, unrecovered, n_total):
     return recovery_rate, average_similarity, kl_divergence, fc_distance
 
 
-def display_table1(input_file):
+def display_table1(input_file: Path):
     """
     Compute various metrics for table 1 and display it in a notebook
 
@@ -106,8 +103,8 @@ def metrics_for_figure4(recovered):
         Recovered: Dataframe, The successfully recovered molecules
 
     Returns:
-    score_target: contains SA, LogP, QED, MW scores for target molecules
-    score_decoded: contains SA, LogP, QED, MW scores for target molecules
+        score_target: contains SA, LogP, QED, MW scores for target molecules
+        score_decoded: contains SA, LogP, QED, MW scores for target molecules
     """
     score_target = {}
     score_decoded = {}
@@ -117,7 +114,6 @@ def metrics_for_figure4(recovered):
         score_target[func] = [oracle(smi) for smi in recovered["targets"]]
         score_decoded[func] = [oracle(smi) for smi in recovered["decoded"]]
 
-    MW = Descriptors.ExactMolWt(Chem.MolFromSmiles('CC'))
     score_target["MW"] = [Descriptors.ExactMolWt(Chem.MolFromSmiles(smi)) for smi in recovered["targets"]]
     score_decoded["MW"] = [Descriptors.ExactMolWt(Chem.MolFromSmiles(smi)) for smi in recovered["decoded"]]
 
