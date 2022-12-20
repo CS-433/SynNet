@@ -2,7 +2,13 @@ import re
 import random
 
 from .file_utils import *
-from .paths import data_folder, intermediates_folder, download_folder, molecules_folder, test_set_path
+from .paths import (
+    data_folder,
+    intermediates_folder,
+    download_folder,
+    molecules_folder,
+    test_set_path,
+)
 
 import requests
 from tqdm.auto import tqdm
@@ -19,7 +25,7 @@ molecules_folder.mkdir(exist_ok=True)
 
 
 def download_file(
-        url: str, output: Path, force: bool, progress_bar: bool = True
+    url: str, output: Path, force: bool, progress_bar: bool = True
 ) -> Path:
     """
     Download a file and store it in the provided output path.
@@ -193,7 +199,9 @@ def get_building_blocks(force=False) -> list[smile]:
         A list containing the building block smiles
     """
 
-    output_path = data_folder / "assets" / "building-blocks" / "enamine-us-smiles.csv.gz"
+    output_path = (
+        data_folder / "assets" / "building-blocks" / "enamine-us-smiles.csv.gz"
+    )
 
     if should_skip("building_blocks", "compute", output_path, force):
         smiles = BuildingBlockFileHandler().load(str(output_path))
@@ -218,9 +226,7 @@ def get_test_set() -> list[smile]:
     return load_smiles(test_set_path)
 
 
-def get_chembl_dataset(
-        sample_size: int = None, force=False
-) -> list[smile]:
+def get_chembl_dataset(sample_size: int = None, force=False) -> list[smile]:
     """
     Retrieve the ChEMBL smiles.
 
@@ -309,7 +315,7 @@ def get_zinc_dataset(sample_size=None, force=False) -> list[str]:
         #
         # This is not perfect as the correlation between molecules in the same file is high.
         # But it avoids downloading the whole dataset
-        links = links.sample(frac=1, random_state=random.randint(0, 2 ** 32 - 1))
+        links = links.sample(frac=1, random_state=random.randint(0, 2**32 - 1))
 
     # Retrieve elements from the column
     links = links[0]

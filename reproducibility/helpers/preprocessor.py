@@ -23,8 +23,7 @@ from synnet.MolEmbedder import MolEmbedder
 from functools import partial
 
 
-def filter_bblocks(bblocks: list[smile], force=False
-) -> (list[smile], ReactionSet):
+def filter_bblocks(bblocks: list[smile], force=False) -> (list[smile], ReactionSet):
     """
     This function is equivalent to script/01-filter-building-blocks.py
 
@@ -87,7 +86,8 @@ def filter_bblocks(bblocks: list[smile], force=False
     return bblocks, rxn_collection
 
 
-def compute_embeddings(bblocks: list[smile], cpu_cores: int, force=False
+def compute_embeddings(
+    bblocks: list[smile], cpu_cores: int, force=False
 ) -> MolEmbedder:
     """
     This function is equivalent to script/02-compute-embeddings.py
@@ -106,7 +106,9 @@ def compute_embeddings(bblocks: list[smile], cpu_cores: int, force=False
     Returns:
         The loader/computed molecule embedder
     """
-    mol_embedder_path = data_folder / "pre-process" / "embeddings" / "hb-enamine-embeddings.npy"
+    mol_embedder_path = (
+        data_folder / "pre-process" / "embeddings" / "hb-enamine-embeddings.npy"
+    )
 
     mol_embedder = MolEmbedder(processes=cpu_cores)
 

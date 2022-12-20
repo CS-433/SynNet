@@ -15,10 +15,10 @@ molecules_folder = data_folder / "assets" / "molecules"
 
 test_set_path = molecules_folder / "test_set.csv.gz"
 
+
 def synthesis_result_path(dataset: str, checkpoint: str) -> Path:
     return results_folder / "synthesis" / dataset / checkpoint
 
 
 def optimize_result_path(dataset: str, checkpoint: str) -> Path:
     return results_folder / "optimize" / dataset / checkpoint
-
