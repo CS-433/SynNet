@@ -20,5 +20,9 @@ def synthesis_result_path(dataset: str, checkpoint: str) -> Path:
     return results_folder / "synthesis" / dataset / checkpoint
 
 
+def synthesis_result_csv(dataset: str, checkpoint: str) -> Path:
+    return synthesis_result_path(dataset, checkpoint) / "decoded_results.csv.gz"
+
+
 def optimize_result_path(dataset: str, checkpoint: str) -> Path:
     return results_folder / "optimize" / dataset / checkpoint

@@ -155,7 +155,10 @@ def produce_figure4(input_file: Path, title: str):
         title: Title of the figure we want to produce
     """
     recovered, unrecovered, n_total = sanitize(input_file)
-    score_target, score_decoded = metrics_for_figure4(recovered)
+    score_target_recovered, score_decoded_recovered = metrics_for_figure4(recovered)
+    score_target_unrecovered, score_decoded_unrecovered = metrics_for_figure4(
+        unrecovered
+    )
 
     xlim = [[1, 7], [-10, 10], [0, 1000], [0, 1]]
     ylim = [[1, 7], [-10, 10], [0, 1000], [0, 1]]
@@ -164,29 +167,51 @@ def produce_figure4(input_file: Path, title: str):
     fig, axs = plt.subplots(1, 4, figsize=(20, 5))
     fig.suptitle(title + " Molecules", fontsize=15)
     for idx, func in enumerate("SA LogP MW QED".split()):
-        target = score_target[func]
-        decoded = score_decoded[func]
+        target_recovered = score_target_recovered[func]
+        decoded_recovered = score_decoded_recovered[func]
+        target_unrecovered = score_target_unrecovered[func]
+        decoded_unrecovered = score_decoded_unrecovered[func]
 
         # compute regression score function
-        r2 = r2_score(decoded, target)
+        r2 = r2_score(
+            target_recovered + target_unrecovered,
+            decoded_recovered + decoded_unrecovered,
+        )
 
         axs[idx].plot(
-            np.linspace(xlim[idx][0], xlim[idx][1], 10),
-            np.linspace(ylim[idx][0], ylim[idx][1], 10),
-            "r--",
+            target_unrecovered,
+            decoded_unrecovered,
+            color="lightsteelblue",
+            linestyle="None",
+            marker="x",
         )
-        axs[idx].plot(decoded, target, "x")
-        axs[idx].set_xlabel(func + " Score", fontsize=15)
+        axs[idx].plot(
+            target_recovered,
+            decoded_recovered,
+            color="royalblue",
+            linestyle="None",
+            marker="x",
+        )
+        axs[idx].set_title(func + " Score", fontsize=15)
         axs[idx].text(
             text_pos[idx][0],
             text_pos[idx][1],
             "$r^2$ = " + "{:.3}".format(r2),
             fontsize=15,
         )
+
+        axs[idx].plot(
+            np.linspace(xlim[idx][0], xlim[idx][1], 10),
+            np.linspace(ylim[idx][0], ylim[idx][1], 10),
+            "r--",
+        )
+
         axs[idx].set_xlim(xlim[idx])
         axs[idx].set_ylim(ylim[idx])
 
-    axs[0].set_ylabel("Recovered Value", fontsize=15)
+    axs[0].set_xlabel("Target molecules", fontsize=15)
+    fig.tight_layout()
+    axs[0].set_ylabel("Decoded molecules", fontsize=15)
     fig.tight_layout()
 
-    plt.savefig(title + "Figure4.png")
+    plt.savefig(title.replace(" ", "_") + "Figure4.png")

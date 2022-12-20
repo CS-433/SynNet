@@ -221,7 +221,9 @@ def get_building_blocks(force=False) -> list[smile]:
     return smiles
 
 
-def get_reachable_dataset(sample_size: int = None, seed: int = None, force=False) -> list[smile]:
+def get_reachable_dataset(
+    sample_size: int = None, seed: int = None, force=False
+) -> list[smile]:
     """
     Retrieve the reachable smiles.
 
