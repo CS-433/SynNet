@@ -18,7 +18,7 @@ from synnet.models.mlp import MLP
 from synnet.utils.data_utils import ReactionSet, SyntheticTree, SyntheticTreeSet
 from synnet.utils.predict_utils import mol_fp, synthetic_tree_decoder_greedy_search
 
-from file_utils import smile
+from .file_utils import smile
 
 
 def wrapper_decoder(smiles: str, **kwargs) -> Tuple[str, float, SyntheticTree]:

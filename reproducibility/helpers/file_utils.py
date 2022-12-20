@@ -140,6 +140,8 @@ def save_smiles(smiles: list[smile], output_path: Path):
         smiles (list[str]): The smiles to store
         output_path (Path): File path
     """
+    output_path.parent.mkdir(exist_ok=True)
+
     df = pd.DataFrame(smiles, columns=["smiles"])
     df.to_csv(output_path, index=False, compression="gzip")
 

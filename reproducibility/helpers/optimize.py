@@ -20,7 +20,7 @@ from synnet.utils.data_utils import ReactionSet
 from synnet.utils.ga_utils import crossover, mutation
 from synnet.utils.predict_utils import synthetic_tree_decoder, tanimoto_similarity
 
-from file_utils import smile
+from .file_utils import smile
 
 
 def processor(emb, **kwargs):

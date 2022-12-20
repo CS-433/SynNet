@@ -1,7 +1,8 @@
 import re
 import random
 
-from file_utils import *
+from .file_utils import *
+from .paths import data_folder, intermediates_folder, download_folder, molecules_folder, test_set_path
 
 import requests
 from tqdm.auto import tqdm
@@ -10,19 +11,15 @@ from rdkit import Chem
 
 from synnet.data_generation.preprocessing import BuildingBlockFileHandler
 from synnet.models.mlp import MLP
-from synnet.utils.data_utils import SyntheticTreeSet, SyntheticTree
+from synnet.utils.data_utils import SyntheticTreeSet
 
-# Where the intermediates file of the downloader are store
-intermediates_path = Path(".") / "intermediates"
-# Where the downloaded files are stored
-download_path = intermediates_path / "downloads"
-
-intermediates_path.mkdir(exist_ok=True)
-download_path.mkdir(exist_ok=True)
+intermediates_folder.mkdir(exist_ok=True)
+download_folder.mkdir(exist_ok=True)
+molecules_folder.mkdir(exist_ok=True)
 
 
 def download_file(
-    url: str, output: Path, force: bool, progress_bar: bool = True
+        url: str, output: Path, force: bool, progress_bar: bool = True
 ) -> Path:
     """
     Download a file and store it in the provided output path.
@@ -104,7 +101,7 @@ def convert_sdf_to_smiles(input_path: Path, sample: int = None) -> list[smile]:
     return [Chem.MolToSmiles(mol, canonical=True, isomericSmiles=False) for mol in mols]
 
 
-def get_original_checkpoints(project_root: Path, force=False) -> list[MLP]:
+def get_original_checkpoints(force=False) -> list[MLP]:
     """
     Retrieve the original checkpoint of the model trained by the paper's Authors
 
@@ -112,15 +109,14 @@ def get_original_checkpoints(project_root: Path, force=False) -> list[MLP]:
     But you can set force to True to bypass any existing intermediate file.
 
     Args:
-        project_root: Path to the project root
         force (False): If set, any stored file will be bypassed
 
     Returns:
         A list containing the checkpoints
     """
 
-    tar_file = download_path / "original_checkpoints.tar.gz"
-    checkpoint_path = project_root / "original_checkpoints"
+    tar_file = download_folder / "original_checkpoints.tar.gz"
+    checkpoint_path = data_folder / "original_checkpoints"
 
     # Check that it does not exist yet
     if should_skip("original checkpoints", "compute", checkpoint_path, force):
@@ -129,7 +125,7 @@ def get_original_checkpoints(project_root: Path, force=False) -> list[MLP]:
     # retrieve the checkpoint tar file
     download_file("https://figshare.com/ndownloader/files/31067692", tar_file, force)
     # extract it
-    extract_output = extract_tar(tar_file, intermediates_path, force)
+    extract_output = extract_tar(tar_file, intermediates_folder, force)
     checkpoint_temp_path = extract_output / "hb_fp_2_4096_256"
 
     # move original_checkpoints to their respective folders
@@ -147,7 +143,7 @@ def get_original_checkpoints(project_root: Path, force=False) -> list[MLP]:
     return load_checkpoints(checkpoint_path)
 
 
-def get_trained_checkpoints(project_root: Path, force=False) -> list[MLP]:
+def get_trained_checkpoints(force=False) -> list[MLP]:
     """
     Retrieve the checkpoint of the model we trained
 
@@ -155,14 +151,13 @@ def get_trained_checkpoints(project_root: Path, force=False) -> list[MLP]:
     But you can set force to True to bypass any existing intermediate file.
 
     Args:
-        project_root: Path to the project root
         force (False): If set, any stored file will be bypassed
 
     Returns:
         A list containing the checkpoints
     """
 
-    checkpoint_path = project_root / "trained_checkpoints"
+    checkpoint_path = data_folder / "trained_checkpoints"
 
     models = {
         "act": "https://drive.switch.ch/index.php/s/w8uo1CmI6JZKoa1/download",
@@ -177,14 +172,14 @@ def get_trained_checkpoints(project_root: Path, force=False) -> list[MLP]:
 
     checkpoint_path.mkdir()
     for model, url in models.items():
-        model_tar = download_file(url, download_path, force)
+        model_tar = download_file(url, download_folder, force)
         extracted_path = extract_tar(model_tar, checkpoint_path, force)
         extracted_path.rename(checkpoint_path / model)
 
     return load_checkpoints(checkpoint_path)
 
 
-def get_building_blocks(project_root: Path, force=False) -> list[smile]:
+def get_building_blocks(force=False) -> list[smile]:
     """
     Retrieve the building blocks smiles.
 
@@ -192,20 +187,13 @@ def get_building_blocks(project_root: Path, force=False) -> list[smile]:
     But you can set force to True to bypass any existing intermediate file.
 
     Args:
-        project_root: Path to the project root
         force (False): If set, any stored file will be bypassed
 
     Returns:
         A list containing the building block smiles
     """
 
-    output_path = (
-        project_root
-        / "data"
-        / "assets"
-        / "building-blocks"
-        / "enamine-us-smiles.csv.gz"
-    )
+    output_path = data_folder / "assets" / "building-blocks" / "enamine-us-smiles.csv.gz"
 
     if should_skip("building_blocks", "compute", output_path, force):
         smiles = BuildingBlockFileHandler().load(str(output_path))
@@ -214,7 +202,7 @@ def get_building_blocks(project_root: Path, force=False) -> list[smile]:
     # download building_block sdf
     sdf_file = download_file(
         "https://drive.switch.ch/index.php/s/zLDApVjC7bU5qx2/download",
-        download_path,
+        download_folder,
         force,
     )
     # convert sdf to smiles
@@ -227,11 +215,11 @@ def get_building_blocks(project_root: Path, force=False) -> list[smile]:
 
 def get_test_set() -> list[smile]:
     print("Loading test set...")
-    return load_smiles(Path("data") / "reachable_molecules.csv.gz")
+    return load_smiles(test_set_path)
 
 
 def get_chembl_dataset(
-    project_root: Path, sample_size: int = None, force=False
+        sample_size: int = None, force=False
 ) -> list[smile]:
     """
     Retrieve the ChEMBL smiles.
@@ -242,7 +230,6 @@ def get_chembl_dataset(
     But you can set force to True to bypass any existing intermediate file.
 
     Args:
-        project_root: Path to the project root
         sample_size (Optional): If set, only a sample of the dataset will be retrieved
         force: If set, any stored file will be bypassed
 
@@ -250,10 +237,8 @@ def get_chembl_dataset(
         A list containing the ChEMBL smiles
     """
 
-    sdf_file = intermediates_path / "chembl_31.sdf"
-    output_path = (
-        project_root / "data" / "assets" / "molecules" / "chembl-smiles.csv.gz"
-    )
+    sdf_file = intermediates_folder / "chembl_31.sdf"
+    output_path = molecules_folder / "chembl-smiles.csv.gz"
 
     # Check that it does not exist yet
     if should_skip("ChEMBL", "compute", output_path, force):
@@ -270,7 +255,7 @@ def get_chembl_dataset(
     # Download and extract ChEMBL sdf
     compressed_sdf = download_file(
         "https://drive.switch.ch/index.php/s/jXuJyFIbADdSJkR/download",
-        download_path,
+        download_folder,
         force,
     )
     decompress_file(compressed_sdf, sdf_file, force)
@@ -283,7 +268,7 @@ def get_chembl_dataset(
     return smiles
 
 
-def get_zinc_dataset(project_root: Path, sample_size=None, force=False) -> list[str]:
+def get_zinc_dataset(sample_size=None, force=False) -> list[str]:
     """
     Retrieve the ZINC smiles.
 
@@ -293,7 +278,6 @@ def get_zinc_dataset(project_root: Path, sample_size=None, force=False) -> list[
     But you can set force to True to bypass any existing intermediate file.
 
     Args:
-        project_root: Path to the project root
         sample_size (Optional): If set, only a sample of the dataset will be retrieved
         force: If set, any stored file will be bypassed
 
@@ -301,8 +285,8 @@ def get_zinc_dataset(project_root: Path, sample_size=None, force=False) -> list[
         A list containing the ZINC smiles
     """
 
-    urls_path = project_root / "reproducibility" / "data" / "ZINC-downloader-2D.csv"
-    output_path = project_root / "data" / "assets" / "molecules" / "zinc-smiles.csv.gz"
+    urls_path = data_folder / "ZINC-downloader-2D.csv"
+    output_path = molecules_folder / "zinc-smiles.csv.gz"
 
     # Check whether this process should be skipped
     if should_skip("ZINC", "compute", output_path, force):
@@ -325,7 +309,7 @@ def get_zinc_dataset(project_root: Path, sample_size=None, force=False) -> list[
         #
         # This is not perfect as the correlation between molecules in the same file is high.
         # But it avoids downloading the whole dataset
-        links = links.sample(frac=1, random_state=random.randint(0, 2**32 - 1))
+        links = links.sample(frac=1, random_state=random.randint(0, 2 ** 32 - 1))
 
     # Retrieve elements from the column
     links = links[0]
@@ -334,7 +318,7 @@ def get_zinc_dataset(project_root: Path, sample_size=None, force=False) -> list[
 
     pbar = tqdm(total=sample_size)  # Create a manual progress bar
 
-    zinc_downloads = download_path / "zinc"
+    zinc_downloads = download_folder / "zinc"
     zinc_downloads.mkdir(exist_ok=True)
 
     for link in links:
@@ -380,7 +364,7 @@ def get_filtered_syntrees(force=False) -> dict[str, list[dict]]:
     output = {}
 
     for name, url in trees:
-        syntree_path = intermediates_path / f"{name}.json.gz"
+        syntree_path = intermediates_folder / f"{name}.json.gz"
         # Download compressed file
         download_file(url, syntree_path, force)
         # Load tree

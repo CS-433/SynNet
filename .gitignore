@@ -1,8 +1,9 @@
 # === custom ===
-reproducibility/intermediates/
+/reproducibility/intermediates/
+/reproducibility/data/
+!/reproducibility/data/ZINC-downloader-2D.csv
 /data/
 figures/syntrees/
-results/
 original_checkpoints/
 trained_checkpoints/
 oracle/
