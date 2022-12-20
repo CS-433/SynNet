@@ -221,12 +221,44 @@ def get_building_blocks(force=False) -> list[smile]:
     return smiles
 
 
-def get_test_set() -> list[smile]:
+def get_test_set(sample_size: int = None, seed: int = None, force=False) -> list[smile]:
+    """
+    Retrieve the test set smiles.
+
+    Args:
+        sample_size (Optional): If set, only a sample of the dataset will be retrieved
+        seed: (None): Seed used to de-randomise the sampling of the data
+        force (False): If set, any stored file will be bypassed
+
+    Returns:
+        A list containing the building block smiles
+    """
     print("Loading test set...")
-    return load_smiles(test_set_path)
+    if should_skip("test set", "compute", test_set_path, force):
+        # Load the data
+        smiles = load_smiles(test_set_path)
+        if sample_size and len(smiles) != sample_size:
+            print(
+                "The number of samples differs from the expected amount. The dataset will be recomputed"
+            )
+            safe_remove(test_set_path)
+        else:
+            return smiles
+
+    if seed is not None:
+        random.seed(seed)
+
+    test = get_filtered_syntrees()["test"]
+
+    smiles = [tree["root"]["smiles"] for tree in random.sample(test, sample_size)]
+    save_smiles(smiles, test_set_path)
+
+    return smiles
 
 
-def get_chembl_dataset(sample_size: int = None, force=False) -> list[smile]:
+def get_chembl_dataset(
+    sample_size: int = None, seed: int = None, force=False
+) -> list[smile]:
     """
     Retrieve the ChEMBL smiles.
 
@@ -237,6 +269,7 @@ def get_chembl_dataset(sample_size: int = None, force=False) -> list[smile]:
 
     Args:
         sample_size (Optional): If set, only a sample of the dataset will be retrieved
+        seed: (None): Seed used to de-randomise the sampling of the data
         force: If set, any stored file will be bypassed
 
     Returns:
@@ -266,7 +299,11 @@ def get_chembl_dataset(sample_size: int = None, force=False) -> list[smile]:
     )
     decompress_file(compressed_sdf, sdf_file, force)
 
-    # Convert sdf to smiles
+    # Set seed if provided
+    if seed is not None:
+        random.seed(seed)
+
+        # Convert sdf to smiles
     smiles = convert_sdf_to_smiles(sdf_file, sample=sample_size)
     # save it
     save_smiles(smiles, output_path)
@@ -274,7 +311,7 @@ def get_chembl_dataset(sample_size: int = None, force=False) -> list[smile]:
     return smiles
 
 
-def get_zinc_dataset(sample_size=None, force=False) -> list[str]:
+def get_zinc_dataset(sample_size=None, seed: int = None, force=False) -> list[str]:
     """
     Retrieve the ZINC smiles.
 
@@ -285,6 +322,7 @@ def get_zinc_dataset(sample_size=None, force=False) -> list[str]:
 
     Args:
         sample_size (Optional): If set, only a sample of the dataset will be retrieved
+        seed: (None): Seed used to de-randomise the sampling of the data
         force: If set, any stored file will be bypassed
 
     Returns:
@@ -305,6 +343,10 @@ def get_zinc_dataset(sample_size=None, force=False) -> list[str]:
             safe_remove(output_path)
         else:
             return smiles
+
+    # Set seed if provided
+    if seed is not None:
+        random.seed(seed)
 
     # Download the dataset
     links = pd.read_csv(urls_path, header=None)
