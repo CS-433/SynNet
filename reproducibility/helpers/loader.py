@@ -7,7 +7,7 @@ from .paths import (
     intermediates_folder,
     download_folder,
     molecules_folder,
-    test_set_path,
+    reachable_smiles_path,
 )
 
 import requests
@@ -221,9 +221,9 @@ def get_building_blocks(force=False) -> list[smile]:
     return smiles
 
 
-def get_test_set(sample_size: int = None, seed: int = None, force=False) -> list[smile]:
+def get_reachable_dataset(sample_size: int = None, seed: int = None, force=False) -> list[smile]:
     """
-    Retrieve the test set smiles.
+    Retrieve the reachable smiles.
 
     Args:
         sample_size (Optional): If set, only a sample of the dataset will be retrieved
@@ -233,15 +233,16 @@ def get_test_set(sample_size: int = None, seed: int = None, force=False) -> list
     Returns:
         A list containing the building block smiles
     """
-    print("Loading test set...")
-    if should_skip("test set", "compute", test_set_path, force):
+
+    print("Loading reachable set...")
+    if should_skip("reachable set", "compute", reachable_smiles_path, force):
         # Load the data
-        smiles = load_smiles(test_set_path)
+        smiles = load_smiles(reachable_smiles_path)
         if sample_size and len(smiles) != sample_size:
             print(
                 "The number of samples differs from the expected amount. The dataset will be recomputed"
             )
-            safe_remove(test_set_path)
+            safe_remove(reachable_smiles_path)
         else:
             return smiles
 
@@ -251,7 +252,7 @@ def get_test_set(sample_size: int = None, seed: int = None, force=False) -> list
     test = get_filtered_syntrees()["test"]
 
     smiles = [tree["root"]["smiles"] for tree in random.sample(test, sample_size)]
-    save_smiles(smiles, test_set_path)
+    save_smiles(smiles, reachable_smiles_path)
 
     return smiles
 

@@ -13,7 +13,7 @@ download_folder = intermediates_folder / "downloads"
 
 molecules_folder = data_folder / "assets" / "molecules"
 
-test_set_path = molecules_folder / "test_set.csv.gz"
+reachable_smiles_path = molecules_folder / "reachable.csv.gz"
 
 
 def synthesis_result_path(dataset: str, checkpoint: str) -> Path:
