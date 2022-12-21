@@ -1,6 +1,6 @@
 # Reproducibility Challenge
 
-As part of our 2nd project for EPFL's CS-438 course, we reproduced the result obtained by the SynNet team.
+As part of our 2nd project for EPFL's CS-433 course, we reproduced the results obtained by SynNet, a ML model for *de novo* synthesizable molecular design proposed by Coley et *al.* in this [ICLR 2022 paper](https://arxiv.org/abs/2110.06389).
 
 Our report is available [here](report.pdf)
 
