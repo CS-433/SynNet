@@ -69,29 +69,19 @@ def metrics_for_table1(
 
     average_similarity = np.mean(similarity)
 
-    temp = []
+    data = pd.concat([recovered, unrecovered], ignore_index=True)
+
     # Evaluate on TDC evaluators
-    for metric in "KL_divergence FCD_Distance".split():
-        evaluator = Evaluator(name=metric)
-        try:
-            score_recovered = evaluator(recovered["targets"], recovered["decoded"])
-            score_unrecovered = evaluator(
-                unrecovered["targets"], unrecovered["decoded"]
-            )
-        except TypeError:
-            # Some evaluators only take 1 input args, try that.
-            score_recovered = evaluator(recovered["decoded"])
-            score_unrecovered = evaluator(unrecovered["decoded"])
+    evaluator = Evaluator(name="KL_divergence")
+    kl_divergence = evaluator(data["targets"], data["decoded"])
 
-        temp.append(score_recovered)
-        temp.append(score_unrecovered)
+    evaluator = Evaluator(name="FCD_Distance")
+    fc_distance = evaluator(data["targets"], data["decoded"])
 
-    kl_divergence = temp[0:2]
-    fc_distance = temp[2:4]
     return recovery_rate, average_similarity, kl_divergence, fc_distance
 
 
-def display_table1(input_file: Path):
+def display_table1(input_file: Path, title):
     """
     Compute various metrics for table 1 and display it in a notebook
 
@@ -110,7 +100,7 @@ def display_table1(input_file: Path):
             "KL Divergence ": kl_divergence,
             "FC Distance ": fc_distance,
         },
-        index=["Reachable", "Unreachable"],
+        index=[title],
     )
     display(df)
 
@@ -122,11 +112,11 @@ def metrics_for_figure4(
     Compute various metrics for figure 4
 
     Args:
-        recovered: The successfully recovered molecules
+        molecules: The successfully recovered/unrecovered molecules
 
     Returns:
         score_target: contains SA, LogP, QED, MW scores for target molecules
-        score_decoded: contains SA, LogP, QED, MW scores for target molecules
+        score_decoded: contains SA, LogP, QED, MW scores for decoded molecules
     """
     score_target = {}
     score_decoded = {}
