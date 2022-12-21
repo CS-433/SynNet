@@ -5,6 +5,11 @@ Our model can serve as both a synthesis planning tool and as a tool for synthesi
 
 The method is described in detail in the publication "Amortized tree generation for bottom-up synthesis planning and synthesizable molecular design" available on the [arXiv](https://arxiv.org/abs/2110.06389) and summarized below.
 
+## Reproduction
+
+This project has been partially reproduced by an independent team. The results can be found in the [reproducibility folder](reproducibility/README.md).
+
+
 ## Summary
 
 We model synthetic pathways as tree structures called *synthetic trees*.

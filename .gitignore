@@ -1,5 +1,5 @@
 # === custom ===
-/reproducibility/intermediates/
+/reproducibility/data/intermediates/
 /reproducibility/data/
 !/reproducibility/data/ZINC-downloader-2D.csv
 /data/

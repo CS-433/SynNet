@@ -6,13 +6,13 @@ data_folder = Path("data")
 results_folder = Path("results")
 
 # Where the intermediates file of the downloader are store
-intermediates_folder = Path("intermediates")
+intermediates_folder = data_folder / "intermediates"
 # Where the downloaded files are stored
 download_folder = intermediates_folder / "downloads"
 
-
+# Where we store the different datasets
 molecules_folder = data_folder / "assets" / "molecules"
-
+# Path to the reachable molecules dataset
 reachable_smiles_path = molecules_folder / "reachable.csv.gz"
 
 
