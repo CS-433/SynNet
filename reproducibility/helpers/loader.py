@@ -425,3 +425,44 @@ def get_filtered_syntrees(force=False) -> dict[str, list[dict]]:
         ]
 
     return output
+
+def get_featurized_syntrees(force=False) -> dict[str, list[dict]]:
+    """
+    Download the featurized synthetic trees. (X, y) data for train, validation and test
+    sets, for the 4 networks. 
+
+    """
+
+    featurized = [
+        ("X_act_train","https://drive.switch.ch/index.php/s/DHLixFBA2dCNjYi/download"),
+        ("X_act_valid", "https://drive.switch.ch/index.php/s/9nmYv4GMZ8ySjbm/download"),
+        ("X_act_test", "https://drive.switch.ch/index.php/s/9nmYv4GMZ8ySjbm/download"),
+        ("X_rt1_train", "https://drive.switch.ch/index.php/s/wgK4IXVfZijII18/download"),
+        ("X_rt1_valid", "https://drive.switch.ch/index.php/s/QqRKv056dTTUpe5/download"),
+        ("X_rt1_test", "https://drive.switch.ch/index.php/s/G7AHBwhiziPBWqx/download"),
+        ("X_rt2_train", "https://drive.switch.ch/index.php/s/nLmCUVIg08EnERd/download"),
+        ("X_rt2_val", "https://drive.switch.ch/index.php/s/vafF3pC9O1Alged/download"),
+        ("X_rt2_test", "https://drive.switch.ch/index.php/s/DyqXCqgObbPWcCk/download"),
+        ("X_rxn_train", "https://drive.switch.ch/index.php/s/ywQRsRsYkRyi75v/download"),
+        ("X_rxn_val", "https://drive.switch.ch/index.php/s/ZalZfWMELhgVz9K/download"),
+        ("X_rxn_test", "https://drive.switch.ch/index.php/s/SRLInzNnT5QKOLL/download"),
+        ("y_act_train", "https://drive.switch.ch/index.php/s/ZkKGGfIs1RA0d4F/download"),
+        ("y_act_val", "https://drive.switch.ch/index.php/s/cN9C3wLnON0AY1k/download"),
+        ("y_act_test", "https://drive.switch.ch/index.php/s/ZkKGGfIs1RA0d4F/download"),
+        ("y_rt1_train", "https://drive.switch.ch/index.php/s/0S0kr4uRDSX89l8/download"),
+        ("y_rt1_val", "https://drive.switch.ch/index.php/s/mJgACuav0R50num/download"),
+        ("y_rt1_test", "https://drive.switch.ch/index.php/s/KqcZTVUk3RXu0qi/download"),
+        ("y_rt2_train", "https://drive.switch.ch/index.php/s/GOdT1uqFeaQ1fzf/download"),
+        ("y_rt2_val", "https://drive.switch.ch/index.php/s/cFBZbW7oPaIfY9T/download"),
+        ("y_rt2_test", "https://drive.switch.ch/index.php/s/nQsnWfzpFtEMJ0V/download"),
+        ("y_rxn_train", "https://drive.switch.ch/index.php/s/OENwl9vrLz5h9eP/download"),
+        ("y_rxn_val", "https://drive.switch.ch/index.php/s/30qcDOJHczmgsQf/download"),
+        ("y_rxn_test", "https://drive.switch.ch/index.php/s/6EoUaYrZOl5gDFR/download")
+    ]
+
+    
+
+    for name, url in featurized:
+        syntree_path = intermediates_folder / f"{name}.npz"
+        # Download file
+        download_file(url, syntree_path, force)
